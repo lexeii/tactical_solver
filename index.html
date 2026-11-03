@@ -1,458 +1,554 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Решалка 3x4 + Ачивка</title>
-  <style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=2.0">
+    <title>3×4 Tactical Game Solver</title>
+    <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #1e1e24;
-      color: #e0e0e0;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #1e1e24;
+        color: #e0e0e0;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        touch-action: manipulation;
     }
-    h1 { margin-bottom: 5px; color: #fff; }
-    p.subtitle { margin-top: 0; color: #aaa; font-size: 14px; }
-    
+
+    h1 {
+        margin-bottom: 5px;
+        color: #fff;
+    }
+
+    p.subtitle {
+        margin-top: 0;
+        color: #aaa;
+        font-size: 14px;
+    }
+
     .container {
-      display: flex;
-      gap: 30px;
-      flex-wrap: wrap;
-      justify-content: center;
-      max-width: 950px;
+        display: flex;
+        gap: 30px;
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: 950px;
     }
-    
+
     .board-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
-    
+
     .grid {
-      display: grid;
-      grid-template-columns: 30px repeat(3, 80px);
-      grid-template-rows: 30px repeat(4, 80px);
-      gap: 6px;
-      background: #2a2a32;
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        display: grid;
+        grid-template-columns: 30px repeat(3, 80px);
+        grid-template-rows: 30px repeat(4, 80px);
+        gap: 6px;
+        background: #2a2a32;
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     }
-    
+
     .header-cell {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      color: #888;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: #888;
     }
-    
+
     .cell {
-      width: 80px;
-      height: 80px;
-      border-radius: 6px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      user-select: none;
-      font-size: 13px;
-      font-weight: bold;
-      text-align: center;
-      box-sizing: border-box;
-      transition: transform 0.1s, border-color 0.2s;
-      border: 2px solid transparent;
+        width: 80px;
+        height: 80px;
+        border-radius: 6px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        user-select: none;
+        font-size: 13px;
+        font-weight: bold;
+        text-align: center;
+        box-sizing: border-box;
+        transition: transform 0.1s, border-color 0.2s;
+        border: 2px solid transparent;
+        touch-action: manipulation;
     }
-    .cell:hover { transform: scale(1.03); }
-    .cell:active { transform: scale(0.97); }
-    
+
+    .cell:hover {
+        transform: scale(1.03);
+    }
+
+    .cell:active {
+        transform: scale(0.97);
+    }
+
     /* Types styling */
-    .type-empty { background: #18181c; border: 1px dashed #444; color: #555; }
-    .type-egg { background: #333; color: #eee; border-color: #555; }
-    .type-warrior { background: #800020; color: #fff; } /* Бордовый */
-    .type-alchemist { background: #2e7d32; color: #fff; } /* Зеленый */
-    .type-blaster { background: #00bcd4; color: #000; } /* Синий взрыватель */
-    .type-guardian { background: #c62828; color: #fff; } /* Красный */
+    .type-empty {
+        background: #18181c;
+        border: 1px dashed #444;
+        color: #555;
+    }
+
+    .type-egg {
+        background: #333;
+        color: #eee;
+        border-color: #555;
+    }
+
+    .type-warrior {
+        background: #800020;
+        color: #fff;
+    }
+
+    .type-alchemist {
+        background: #2e7d32;
+        color: #fff;
+    }
+
+    .type-blaster {
+        background: #00bcd4;
+        color: #000;
+    }
+
+    .type-guardian {
+        background: #c62828;
+        color: #fff;
+    }
 
     .hp-badge {
-      font-size: 18px;
-      margin-top: 4px;
+        font-size: 18px;
+        margin-top: 4px;
     }
-    
+
     .panel {
-      background: #2a2a32;
-      padding: 20px;
-      border-radius: 8px;
-      min-width: 320px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        background: #2a2a32;
+        padding: 20px;
+        border-radius: 8px;
+        min-width: 320px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
     }
-    
+
     button {
-      background: #4caf50;
-      color: white;
-      border: none;
-      padding: 10px 16px;
-      font-size: 15px;
-      font-weight: bold;
-      border-radius: 4px;
-      cursor: pointer;
-      width: 100%;
-      margin-bottom: 10px;
-      transition: background 0.2s;
+        background: #4caf50;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        font-size: 15px;
+        font-weight: bold;
+        border-radius: 4px;
+        cursor: pointer;
+        width: 100%;
+        margin-bottom: 10px;
+        transition: background 0.2s;
+        touch-action: manipulation;
     }
-    button:hover { background: #45a049; }
-    button.btn-reset { background: #f44336; }
-    button.btn-reset:hover { background: #d32f2f; }
-    
+
+    button:hover {
+        background: #45a049;
+    }
+
+    button.btn-reset {
+        background: #f44336;
+    }
+
+    button.btn-reset:hover {
+        background: #d32f2f;
+    }
+
     .solution-list {
-      margin-top: 15px;
-      background: #18181c;
-      padding: 10px;
-      border-radius: 4px;
-      max-height: 250px;
-      overflow-y: auto;
+        margin-top: 15px;
+        background: #18181c;
+        padding: 10px;
+        border-radius: 4px;
+        max-height: 250px;
+        overflow-y: auto;
     }
+
     .step-item {
-      padding: 6px;
-      border-bottom: 1px solid #333;
-      display: flex;
-      justify-content: space-between;
+        padding: 6px;
+        border-bottom: 1px solid #333;
+        display: flex;
+        justify-content: space-between;
     }
-    .step-item:last-child { border-bottom: none; }
-    .energy-tag { color: #ffca28; font-weight: bold; }
-    .achievement-tag { color: #ab47bc; font-weight: bold; font-size: 16px; margin-bottom: 8px; display: block; }
-    .status-ok { color: #4caf50; font-weight: bold; }
-    .status-fail { color: #f44336; font-weight: bold; }
+
+    .step-item:last-child {
+        border-bottom: none;
+    }
+
+    .energy-tag {
+        color: #ffca28;
+        font-weight: bold;
+    }
+
+    .achievement-tag {
+        color: #ab47bc;
+        font-weight: bold;
+        font-size: 16px;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .status-ok {
+        color: #4caf50;
+        font-weight: bold;
+    }
+
+    .status-fail {
+        color: #f44336;
+        font-weight: bold;
+    }
 
     .legend {
-      margin-top: 15px;
-      font-size: 12px;
-      color: #aaa;
+        margin-top: 15px;
+        font-size: 12px;
+        color: #aaa;
     }
-    .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-    .legend-color { width: 14px; height: 14px; border-radius: 3px; }
-  </style>
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
+    }
+
+    .legend-color {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+    }
+    </style>
 </head>
+
 <body>
-
-  <h1>Решалка 3x4</h1>
-  <p class="subtitle">Поиск ачивки и минимизация энергии меча (лимит: 28 HP)</p>
-
-  <div class="container">
-    <div class="board-container">
-      <div class="grid" id="grid">
-        <!-- Шапка столбцов -->
-        <div class="header-cell"></div>
-        <div class="header-cell">1</div>
-        <div class="header-cell">2</div>
-        <div class="header-cell">3</div>
-      </div>
+    <h1>3×4 Solver</h1>
+    <p class="subtitle">Finding the Achievement and Minimizing Sword Energy (Limit: 28 HP)</p>
+    <div class="container">
+        <div class="board-container">
+            <div class="grid" id="grid">
+                <!-- Column header -->
+                <div class="header-cell"></div>
+                <div class="header-cell">1</div>
+                <div class="header-cell">2</div>
+                <div class="header-cell">3</div>
+            </div>
+        </div>
+        <div class="panel">
+            <button onclick="solvePuzzle()">Find solution</button>
+            <button class="btn-reset" onclick="resetBoard()">Clear field</button>
+            <div id="result"></div>
+            <div class="legend">
+                <strong>Legend:</strong>
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#18181c; border:1px solid #444"></div> Empty
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#333"></div> Egg (HP: 0)
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#800020"></div> Warrior (HP: 2)
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#2e7d32"></div> Alchemist (HP: 3, +3 neighbors)
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#00bcd4"></div> Bomber (HP: 4, &minus;2 neighbors)
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#c62828"></div> Keeper (HP: 5)
+                </div>
+            </div>
+        </div>
     </div>
+    <script>
+    const TYPES = [
+        { id: 0, name: 'Empty',    baseHp: 0, cssClass: 'type-empty' },
+        { id: 1, name: 'Egg',      baseHp: 0, cssClass: 'type-egg' },
+        { id: 2, name: 'Warrior',  baseHp: 2, cssClass: 'type-warrior' },
+        { id: 3, name: 'Alchmist', baseHp: 3, cssClass: 'type-alchemist' },
+        { id: 4, name: 'Bomber',   baseHp: 4, cssClass: 'type-blaster' },
+        { id: 5, name: 'Keeper',   baseHp: 5, cssClass: 'type-guardian' }
+    ];
 
-    <div class="panel">
-      <button onclick="solvePuzzle()">Рассчитать решение</button>
-      <button class="btn-reset" onclick="resetBoard()">Очистить поле</button>
+    const ROWS = ['A', 'B', 'C', 'D'];
+    const COLS = ['1', '2', '3'];
 
-      <div id="result"></div>
+    let board = Array(12).fill(null).map(() => [0, 0]);
 
-      <div class="legend">
-        <strong>Обозначения:</strong>
-        <div class="legend-item"><div class="legend-color" style="background:#18181c; border:1px solid #444"></div> Пусто</div>
-        <div class="legend-item"><div class="legend-color" style="background:#333"></div> Яйцо (HP: 0)</div>
-        <div class="legend-item"><div class="legend-color" style="background:#800020"></div> Кр. вояка (HP: 2)</div>
-        <div class="legend-item"><div class="legend-color" style="background:#2e7d32"></div> Алхимик (HP: 3, +3 соседям)</div>
-        <div class="legend-item"><div class="legend-color" style="background:#00bcd4"></div> Синий взрыватель (HP: 4, -2 соседям)</div>
-        <div class="legend-item"><div class="legend-color" style="background:#c62828"></div> Красный хранитель (HP: 5)</div>
-      </div>
-    </div>
-  </div>
+    function initGrid() {
+        const gridEl = document.getElementById('grid');
+        while (gridEl.children.length > 4) {
+            gridEl.removeChild(gridEl.lastChild);
+        }
 
-<script>
-  const TYPES = [
-    { id: 0, name: 'Пусто', baseHp: 0, cssClass: 'type-empty' },
-    { id: 1, name: 'Яйцо', baseHp: 0, cssClass: 'type-egg' },
-    { id: 2, name: 'Кр. Вояка', baseHp: 2, cssClass: 'type-warrior' },
-    { id: 3, name: 'Алхимик', baseHp: 3, cssClass: 'type-alchemist' },
-    { id: 4, name: 'Взрыватель', baseHp: 4, cssClass: 'type-blaster' },
-    { id: 5, name: 'Хранитель', baseHp: 5, cssClass: 'type-guardian' }
-  ];
+        for (let r = 0; r < 4; r++) {
+            const rowHeader = document.createElement('div');
+            rowHeader.className = 'header-cell';
+            rowHeader.textContent = ROWS[r];
+            gridEl.appendChild(rowHeader);
 
-  const ROWS = ['A', 'B', 'C', 'D'];
-  const COLS = ['1', '2', '3'];
-
-  let board = Array(12).fill(null).map(() => [0, 0]);
-
-  function initGrid() {
-    const gridEl = document.getElementById('grid');
-    while (gridEl.children.length > 4) {
-      gridEl.removeChild(gridEl.lastChild);
-    }
-
-    for (let r = 0; r < 4; r++) {
-      const rowHeader = document.createElement('div');
-      rowHeader.className = 'header-cell';
-      rowHeader.textContent = ROWS[r];
-      gridEl.appendChild(rowHeader);
-
-      for (let c = 0; c < 3; c++) {
-        const idx = r * 3 + c;
-        const cell = document.createElement('div');
-        cell.id = `cell-${idx}`;
-        cell.onclick = () => cycleCell(idx);
-        gridEl.appendChild(cell);
-      }
-    }
-    render();
-  }
-
-  function cycleCell(idx) {
-    const currentType = board[idx][0];
-    const nextType = (currentType + 1) % TYPES.length;
-    board[idx] = [nextType, TYPES[nextType].baseHp];
-    render();
-  }
-
-  function render() {
-    for (let i = 0; i < 12; i++) {
-      const cell = document.getElementById(`cell-${i}`);
-      const [typeId, hp] = board[i];
-      const typeInfo = TYPES[typeId];
-
-      cell.className = `cell ${typeInfo.cssClass}`;
-      cell.innerHTML = typeId === 0 ? '' : `<div>${typeInfo.name}</div>${typeId !== 1 ? `<div class="hp-badge">${hp}</div>` : ''}`;
-    }
-  }
-
-  function resetBoard() {
-    board = Array(12).fill(null).map(() => [0, 0]);
-    document.getElementById('result').innerHTML = '';
-    render();
-  }
-
-  function getNeighbors(idx) {
-    const r = Math.floor(idx / 3);
-    const c = idx % 3;
-    const neighbors = [];
-    if (r > 0) neighbors.push((r - 1) * 3 + c);
-    if (r < 3) neighbors.push((r + 1) * 3 + c);
-    if (c > 0) neighbors.push(r * 3 + (c - 1));
-    if (c < 2) neighbors.push(r * 3 + (c + 1));
-    return neighbors;
-  }
-
-  function getTotalLivingHp(state) {
-    let sum = 0;
-    for (let cell of state) {
-      if (cell[0] >= 2) sum += cell[1];
-    }
-    return sum;
-  }
-
-  function simulateClick(state, clickIdx) {
-    let nextState = state.map(cell => [...cell]);
-    const targetType = nextState[clickIdx][0];
-    const targetHp = nextState[clickIdx][1];
-
-    if (targetType === 0) return null;
-
-    const energyCost = targetHp;
-    let deathQueue = [{ idx: clickIdx, type: targetType }];
-    nextState[clickIdx] = [0, 0];
-
-    while (deathQueue.length > 0) {
-      const curr = deathQueue.shift();
-      const currIdx = curr.idx;
-      const currType = curr.type;
-
-      if (currType === 3 || currType === 4) {
-        const neighbors = getNeighbors(currIdx);
-        for (let nIdx of neighbors) {
-          const [nType, nHp] = nextState[nIdx];
-          if (nType >= 2) {
-            let newHp = nHp;
-            if (currType === 3) newHp += 3;
-            if (currType === 4) newHp -= 2;
-
-            if (newHp <= 0) {
-              nextState[nIdx] = [0, 0];
-              deathQueue.push({ idx: nIdx, type: nType });
-            } else {
-              nextState[nIdx][1] = newHp;
+            for (let c = 0; c < 3; c++) {
+                const idx = r * 3 + c;
+                const cell = document.createElement('div');
+                cell.id = `cell-${idx}`;
+                cell.onclick = () => cycleCell(idx);
+                gridEl.appendChild(cell);
             }
-          }
         }
-      }
+        render();
     }
 
-    return { nextState, energyCost, maxHpReached: getTotalLivingHp(nextState) };
-  }
-
-  function stateToKey(state) {
-    return state.map(c => `${c[0]}:${c[1]}`).join(',');
-  }
-
-  function isClear(state) {
-    return state.every(c => c[0] === 0);
-  }
-
-  // --- Поиск решения ---
-  function solvePuzzle() {
-    const startKey = stateToKey(board);
-    if (isClear(board)) {
-      document.getElementById('result').innerHTML = '<p style="color:#4caf50">Поле уже пустое!</p>';
-      return;
+    function cycleCell(idx) {
+        const currentType = board[idx][0];
+        const nextType = (currentType + 1) % TYPES.length;
+        board[idx] = [nextType, TYPES[nextType].baseHp];
+        render();
     }
 
-    // 1. Сначала пробуем найти решение для ачивки "Это вышло из-под контроля" (суммарное HP живых >= 68)
-    let achResult = searchAchievement(startKey);
-    if (achResult) {
-      renderResult(achResult, true);
-      return;
+    function render() {
+        for (let i = 0; i < 12; i++) {
+            const cell = document.getElementById(`cell-${i}`);
+            const [typeId, hp] = board[i];
+            const typeInfo = TYPES[typeId];
+
+            cell.className = `cell ${typeInfo.cssClass}`;
+            cell.innerHTML = typeId === 0 ? '' : `<div>${typeInfo.name}</div>${typeId !== 1 ? `<div class="hp-badge">${hp}</div>` : ''}`;
+        }
     }
 
-    // 2. Если ачивка недостижима, ищем стандартное решение с минимальной тратой энергии
-    let standardResult = searchStandard(startKey);
-    if (standardResult) {
-      renderResult(standardResult, false);
-      return;
+    function resetBoard() {
+        board = Array(12).fill(null).map(() => [0, 0]);
+        document.getElementById('result').innerHTML = '';
+        render();
     }
 
-    document.getElementById('result').innerHTML = '<p style="color:#f44336">Решение не найдено!</p>';
-  }
+    function getNeighbors(idx) {
+        const r = Math.floor(idx / 3);
+        const c = idx % 3;
+        const neighbors = [];
+        if (r > 0) neighbors.push((r - 1) * 3 + c);
+        if (r < 3) neighbors.push((r + 1) * 3 + c);
+        if (c > 0) neighbors.push(r * 3 + (c - 1));
+        if (c < 2) neighbors.push(r * 3 + (c + 1));
+        return neighbors;
+    }
 
-  function searchAchievement(startKey) {
-    const visited = new Set([startKey]);
-    let queue = [{ moves: 0, state: board, path: [] }];
+    function getTotalLivingHp(state) {
+        let sum = 0;
+        for (let cell of state) {
+            if (cell[0] >= 2) sum += cell[1];
+        }
+        return sum;
+    }
 
-    while (queue.length > 0) {
-      // Сортируем по количеству ходов (ищем самое короткое для ачивки)
-      queue.sort((a, b) => a.moves - b.moves);
-      const { moves, state, path } = queue.shift();
+    function simulateClick(state, clickIdx) {
+        let nextState = state.map(cell => [...cell]);
+        const targetType = nextState[clickIdx][0];
+        const targetHp = nextState[clickIdx][1];
 
-      for (let i = 0; i < 12; i++) {
-        if (state[i][0] === 0) continue;
+        if (targetType === 0) return null;
 
-        const res = simulateClick(state, i);
-        if (!res) continue;
+        const energyCost = targetHp;
+        let deathQueue = [{ idx: clickIdx, type: targetType }];
+        nextState[clickIdx] = [0, 0];
 
-        // Проверяем условие ачивки: суммарное HP живых достигло 68+
-        if (res.maxHpReached >= 68) {
-          return {
-            path: [...path, { moveIdx: i, cost: res.energyCost }],
-            totalEnergy: path.reduce((s, p) => s + p.cost, 0) + res.energyCost,
-            peakHp: res.maxHpReached
-          };
+        while (deathQueue.length > 0) {
+            const curr = deathQueue.shift();
+            const currIdx = curr.idx;
+            const currType = curr.type;
+
+            if (currType === 3 || currType === 4) {
+                const neighbors = getNeighbors(currIdx);
+                for (let nIdx of neighbors) {
+                    const [nType, nHp] = nextState[nIdx];
+                    if (nType >= 2) {
+                        let newHp = nHp;
+                        if (currType === 3) newHp += 3;
+                        if (currType === 4) newHp -= 2;
+
+                        if (newHp <= 0) {
+                            nextState[nIdx] = [0, 0];
+                            deathQueue.push({ idx: nIdx, type: nType });
+                        } else {
+                            nextState[nIdx][1] = newHp;
+                        }
+                    }
+                }
+            }
         }
 
-        const nextKey = stateToKey(res.nextState);
-        if (!visited.has(nextKey)) {
-          visited.add(nextKey);
-          queue.push({
-            moves: moves + 1,
-            state: res.nextState,
-            path: [...path, { moveIdx: i, cost: res.energyCost }]
-          });
+        return { nextState, energyCost, maxHpReached: getTotalLivingHp(nextState) };
+    }
+
+    function stateToKey(state) {
+        return state.map(c => `${c[0]}:${c[1]}`).join(',');
+    }
+
+    function isClear(state) {
+        return state.every(c => c[0] === 0);
+    }
+
+    // --- Finding a Solution ---
+    function solvePuzzle() {
+        const startKey = stateToKey(board);
+        if (isClear(board)) {
+            document.getElementById('result').innerHTML = '<p style="color:#4caf50">Поле уже пустое!</p>';
+            return;
         }
-      }
-    }
-    return null;
-  }
 
-  function searchStandard(startKey) {
-    const dist = new Map();
-    const parent = new Map();
-    dist.set(startKey, 0);
-
-    let queue = [{ cost: 0, moves: 0, state: board }];
-    let bestEndKey = null;
-
-    while (queue.length > 0) {
-      queue.sort((a, b) => a.cost - b.cost || a.moves - b.moves);
-      const { cost, moves, state } = queue.shift();
-      const currKey = stateToKey(state);
-
-      if (cost > dist.get(currKey)) continue;
-
-      if (isClear(state)) {
-        bestEndKey = currKey;
-        break;
-      }
-
-      for (let i = 0; i < 12; i++) {
-        if (state[i][0] === 0) continue;
-
-        const res = simulateClick(state, i);
-        if (!res) continue;
-
-        const nextKey = stateToKey(res.nextState);
-        const newCost = cost + res.energyCost;
-        const newMoves = moves + 1;
-
-        if (!dist.has(nextKey) || newCost < dist.get(nextKey)) {
-          dist.set(nextKey, newCost);
-          parent.set(nextKey, { prevKey: currKey, moveIdx: i, cost: res.energyCost });
-          queue.push({ cost: newCost, moves: newMoves, state: res.nextState });
+        // 1. First, let's try to find a solution for the achievement “It's Gotten Out of Hand” (total HP of living targets 68+)
+        let achResult = searchAchievement(startKey);
+        if (achResult) {
+            renderResult(achResult, true);
+            return;
         }
-      }
+
+        // 2. If the goal is unattainable, we look for a standard solution that requires the least amount of energy
+        let standardResult = searchStandard(startKey);
+        if (standardResult) {
+            renderResult(standardResult, false);
+            return;
+        }
+
+        document.getElementById('result').innerHTML = '<p style="color:#f44336">No solution found!</p>';
     }
 
-    if (!bestEndKey) return null;
+    function searchAchievement(startKey) {
+        const visited = new Set([startKey]);
+        let queue = [{ moves: 0, state: board, path: [] }];
 
-    let path = [];
-    let curr = bestEndKey;
-    while (parent.has(curr)) {
-      const p = parent.get(curr);
-      path.unshift(p);
-      curr = p.prevKey;
+        while (queue.length > 0) {
+            // Sort by number of moves (to find the shortest path to the goal)
+            queue.sort((a, b) => a.moves - b.moves);
+            const { moves, state, path } = queue.shift();
+
+            for (let i = 0; i < 12; i++) {
+                if (state[i][0] === 0) continue;
+
+                const res = simulateClick(state, i);
+                if (!res) continue;
+
+                // Check the achievement condition: the total HP of living units has reached 68+
+                if (res.maxHpReached >= 68) {
+                    return {
+                        path: [...path, { moveIdx: i, cost: res.energyCost }],
+                        totalEnergy: path.reduce((s, p) => s + p.cost, 0) + res.energyCost,
+                        peakHp: res.maxHpReached
+                    };
+                }
+
+                const nextKey = stateToKey(res.nextState);
+                if (!visited.has(nextKey)) {
+                    visited.add(nextKey);
+                    queue.push({
+                        moves: moves + 1,
+                        state: res.nextState,
+                        path: [...path, { moveIdx: i, cost: res.energyCost }]
+                    });
+                }
+            }
+        }
+        return null;
     }
 
-    return {
-      path,
-      totalEnergy: dist.get(bestEndKey),
-      peakHp: null
-    };
-  }
+    function searchStandard(startKey) {
+        const dist = new Map();
+        const parent = new Map();
+        dist.set(startKey, 0);
 
-  function renderResult(result, isAchievement) {
-    const resEl = document.getElementById('result');
-    let html = '';
+        let queue = [{ cost: 0, moves: 0, state: board }];
+        let bestEndKey = null;
 
-    if (isAchievement) {
-      html += `<span class="achievement-tag">🏆 Решение для ачивки "Это вышло из-под контроля"!</span>`;
-      html += `<p>Пиковое HP живых врагов: <strong class="energy-tag">${result.peakHp} HP</strong> (нужно 68+)<br>Ходов до цели: <strong>${result.path.length}</strong></p>`;
-    } else {
-      const swordLimit = 28;
-      const isSwordOk = result.totalEnergy <= swordLimit;
-      html += `<h3>Полная очистка поля</h3>`;
-      html += `<p>Затраты энергии меча: <strong class="energy-tag">${result.totalEnergy} HP</strong> (лимит: ${swordLimit} HP)<br>`;
-      html += isSwordOk 
-        ? `<span class="status-ok">✔ Меч выдержит, приз твой!</span>` 
-        : `<span class="status-fail">✖ Перебор! Мечу нужно ${result.totalEnergy} HP, а у тебя только ${swordLimit}.</span>`;
-      html += `<br>Всего ходов: <strong>${result.path.length}</strong></p>`;
+        while (queue.length > 0) {
+            queue.sort((a, b) => a.cost - b.cost || a.moves - b.moves);
+            const { cost, moves, state } = queue.shift();
+            const currKey = stateToKey(state);
+
+            if (cost > dist.get(currKey)) continue;
+
+            if (isClear(state)) {
+                bestEndKey = currKey;
+                break;
+            }
+
+            for (let i = 0; i < 12; i++) {
+                if (state[i][0] === 0) continue;
+
+                const res = simulateClick(state, i);
+                if (!res) continue;
+
+                const nextKey = stateToKey(res.nextState);
+                const newCost = cost + res.energyCost;
+                const newMoves = moves + 1;
+
+                if (!dist.has(nextKey) || newCost < dist.get(nextKey)) {
+                    dist.set(nextKey, newCost);
+                    parent.set(nextKey, { prevKey: currKey, moveIdx: i, cost: res.energyCost });
+                    queue.push({ cost: newCost, moves: newMoves, state: res.nextState });
+                }
+            }
+        }
+
+        if (!bestEndKey) return null;
+
+        let path = [];
+        let curr = bestEndKey;
+        while (parent.has(curr)) {
+            const p = parent.get(curr);
+            path.unshift(p);
+            curr = p.prevKey;
+        }
+
+        return {
+            path,
+            totalEnergy: dist.get(bestEndKey),
+            peakHp: null
+        };
     }
 
-    html += `<div class="solution-list">`;
-    result.path.forEach((step, i) => {
-      const r = Math.floor(step.moveIdx / 3);
-      const c = step.moveIdx % 3;
-      const coord = `${ROWS[r]}${COLS[c]}`;
-      html += `
+    function renderResult(result, isAchievement) {
+        const resEl = document.getElementById('result');
+        let html = '';
+
+        if (isAchievement) {
+            html += `<span class="achievement-tag">🏆 Solution for the “It's gotten out of hand!” achievement!</span>`;
+            html += `<p>Peak HP of live enemies: <strong class="energy-tag">${result.peakHp} HP</strong> (must be 68+)<br>Moves to the goal: <strong>${result.path.length}</strong></p>`;
+        } else {
+            const swordLimit = 28;
+            const isSwordOk = result.totalEnergy <= swordLimit;
+            html += `<h3>Complete Field Cleanup</h3>`;
+            html += `<p>Sword Energy Costs: <strong class="energy-tag">${result.totalEnergy} HP</strong> (limit: ${swordLimit} HP)<br>`;
+            html += isSwordOk ?
+                `<span class="status-ok">✔ The sword will hold, the prize is yours!</span>` :
+                `<span class="status-fail">✖ That's too much! The sword requires ${result.totalEnergy} HP, but you only have ${swordLimit}.</span>`;
+            html += `<br>Total moves: <strong>${result.path.length}</strong></p>`;
+        }
+
+        html += `<div class="solution-list">`;
+        result.path.forEach((step, i) => {
+            const r = Math.floor(step.moveIdx / 3);
+            const c = step.moveIdx % 3;
+            const coord = `${ROWS[r]}${COLS[c]}`;
+            html += `
         <div class="step-item">
-          <span>Шаг ${i + 1}: Клик на <strong>${coord}</strong></span>
-          <span class="energy-tag">-${step.cost} HP</span>
+          <span>Step ${i + 1}: Click on <strong>${coord}</strong></span>
+          <span class="energy-tag">&minus;${step.cost} HP</span>
         </div>
       `;
-    });
-    html += `</div>`;
+        });
+        html += `</div>`;
 
-    resEl.innerHTML = html;
-  }
+        resEl.innerHTML = html;
+    }
 
-  initGrid();
-</script>
+    initGrid();
+    </script>
 </body>
+
 </html>
